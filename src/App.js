@@ -36,6 +36,28 @@ const App = () => {
     }
   }
 
+  /**
+  * Implement your connectWallet method here
+  */
+   const connectWallet = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (!ethereum) {
+        alert("Get MetaMask!");
+        return;
+      }
+
+      const accounts = await ethereum.request({ method: "eth_requestAccounts" });
+
+      console.log("Connected", accounts[0]);
+      setCurrentAccount(accounts[0]);
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+
   useEffect(() => {
     checkIfWalletIsConnected();
   }, [])
@@ -51,9 +73,18 @@ const App = () => {
           Connect your Ethereum wallet and wave at me!
         </div>
 
-        <button className="waveButton" onClick={null}>
-          Wave
-        </button>
+        {currentAccount && (
+          <button className="waveButton" onClick={null}>
+            Wave <span role="img" aria-label="Wave emoji"> 👋</span> 
+          </button>
+        )}
+
+        {/** If there is no currentAccount render this button **/}
+        {!currentAccount && (
+          <button className="connectButton" onClick={connectWallet}>
+            Connect Wallet
+          </button>
+        )}
       </div>
     </div>
   );
