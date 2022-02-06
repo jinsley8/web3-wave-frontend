@@ -43,3 +43,12 @@
   border-radius: 5px;
   background-color: navy;
 }
+
+.walletAddress {
+  color: #333;
+  margin-top: 32px;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 5px;
+  background-color: #ccc;
+}
