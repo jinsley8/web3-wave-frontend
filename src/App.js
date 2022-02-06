@@ -10,7 +10,6 @@ export default function App() {
 
   return (
     <div className="mainContainer">
-
       <div className="dataContainer">
         <div className="header">
           👋 Wave Portal
