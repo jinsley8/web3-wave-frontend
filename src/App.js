@@ -10,35 +10,25 @@ const App = () => {
   const [currentAccount, setCurrentAccount] = useState("");
   const [allWaves, setAllWaves] = useState([]);
   const [message, setMessage] = useState("");
-
-  // const [resourceCount, setResourceCount] = useState();
-  // const [resourceAddress, setResourceAddress] = useState();
-  // const [isConnecting, setConnecting] = useState(false);
-  // const [isLoading, setLoading] = useState(false);
   const [isMining, setMining] = useState(false);
 
   const contractAddress = process.env.REACT_APP_CONTRACT_ADDRESS;
   const contractABI = abi.abi;
 
-  /*
-   * Create a method that gets all waves from the contract
-   */
+  /** Create a method that gets all waves from the contract */
   const getAllWaves = async () => {
     try {
       const { ethereum } = window;
+
       if (ethereum) {
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
         const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
 
-        /*
-         * Call the getAllWaves method from the Smart Contract
-         */
+        /** Call the getAllWaves method from the Smart Contract */
         const waves = await wavePortalContract.getAllWaves();
 
-        /*
-         * Only need address, timestamp, and message in our UI
-         */
+        /** Only need address, timestamp, and message in our UI */
         let wavesCleaned = [];
         waves.forEach(wave => {
           wavesCleaned.push({
@@ -48,9 +38,7 @@ const App = () => {
           });
         });
 
-        /*
-         * Store our data in React State
-         */
+        /** Store our data in React State */
         setAllWaves(wavesCleaned);
       } else {
         console.log("Ethereum object doesn't exist!")
@@ -71,9 +59,7 @@ const App = () => {
         console.log("We have the ethereum object", ethereum);
       }
 
-      /*
-      * Check if we're authorized to access the user's wallet
-      */
+      /** Check if we're authorized to access the user's wallet */
       const accounts = await ethereum.request({ method: "eth_accounts" });
 
       if (accounts.length !== 0) {
@@ -88,9 +74,7 @@ const App = () => {
     }
   }
 
-  /**
-  * Implement your connectWallet method here
-  */
+  /** Implement your connectWallet method here */
   const connectWallet = async () => {
     try {
       const { ethereum } = window;
@@ -109,10 +93,9 @@ const App = () => {
     }
   }
 
-  /** Wave() and getTotalWaves() from smart contract **/
+  /** Wave() and getTotalWaves() from smart contract */
   const submitWave = async (e) => {
     e.preventDefault();
-    console.log(message);
 
     try {
       const { ethereum } = window;
@@ -125,9 +108,7 @@ const App = () => {
         let count = await wavePortalContract.getTotalWaves();
         console.log("Retrieved total wave count...", count.toNumber());
 
-        /*
-        * Execute the actual wave from your smart contract
-        */
+        /** Execute the actual wave from your smart contract */
         const waveTxn = await wavePortalContract.wave(message, { gasLimit: 300000 });
         setMessage("")
         setMining(true);
@@ -155,6 +136,36 @@ const App = () => {
   useEffect(() => {
     getAllWaves();
   }, [allWaves]);
+
+  useEffect(() => {
+    let wavePortalContract;
+
+    const onNewWave = (from, timestamp, message) => {
+      console.log("NewWave", from, timestamp, message);
+      setAllWaves(prevState => [
+        ...prevState,
+        {
+          address: from,
+          timestamp: new Date(timestamp * 1000),
+          message: message,
+        },
+      ]);
+    };
+
+    if (window.ethereum) {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+
+      wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
+      wavePortalContract.on("NewWave", onNewWave);
+    }
+
+    return () => {
+      if (wavePortalContract) {
+        wavePortalContract.off("NewWave", onNewWave);
+      }
+    };
+  }, []);
   /* eslint-enable */
 
   return (
